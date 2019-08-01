@@ -6,10 +6,49 @@ namespace DemoApp
 {
     public class DataGridViewButtonPlusColumn : DataGridViewColumn
     {
+        DataGridViewButtonPlusColumnParam _param = new DataGridViewButtonPlusColumnParam();
         public DataGridViewButtonPlusColumn()
         {
             CellTemplate = new DataGridViewButtonPlusCell();
         }
+        public DataGridViewButtonPlusColumn(DataGridViewButtonPlusColumnParam param)
+        {
+            _param = param;
+            CellTemplate = new DataGridViewButtonPlusCell();
+        }
+
+        public void Redraw()
+        {
+            foreach (DataGridViewRow dgvr in DataGridView.Rows)
+            {
+                foreach (DataGridViewColumn dgvc in DataGridView.Columns)
+                {
+                    if (dgvc == this)
+                    {
+                        var cell = dgvr.Cells[dgvc.Index] as DataGridViewButtonPlusCell;
+                        cell.Init(new DataGridViewButtonPlusCellParam
+                        {
+                            DefaultBackColor = _param.DefaultBackColor,
+                            HoverBackColor = _param.HoverBackColor,
+                            Radius = _param.Radius,
+                            TextFont = _param.TextFont,
+                            Text = _param.Text,
+                            FontColor = _param.FontColor,
+                            HoverFontColor = _param.HoverFontColor,
+                            BackgroundColor = _param.BackgroundColor
+                        });
+                        cell.ReDraw();
+                    }
+                }
+            }
+        }
+        public void Redraw(DataGridViewButtonPlusColumnParam param)
+        {
+            _param = param;
+            Redraw();
+        }
+
+        public DataGridViewButtonPlusColumnParam Parameter { get => _param; }
     }
 
     public class DataGridViewButtonPlusCell : DataGridViewButtonCell
@@ -52,6 +91,36 @@ namespace DemoApp
             nowColIndex = this.DataGridView.Columns.Count - 1;
         }
 
+        public void ReDraw()
+        {
+            Rectangle cellBounds = DataGridView[ColumnIndex, RowIndex].ContentBounds;
+            Rectangle recDetail = new Rectangle(cellBounds.Location.X, cellBounds.Location.Y, cellBounds.Width, cellBounds.Height);
+            Rectangle paintCellBounds = DataGridView.GetCellDisplayRectangle(ColumnIndex, RowIndex, true);
+
+            paintCellBounds.Width = DataGridView.Columns[nowColIndex].Width;
+            paintCellBounds.Height = DataGridView.Rows[nowRowIndex].Height;
+
+            PrivatePaint(DataGridView.CreateGraphics(), paintCellBounds, RowIndex, DataGridView.RowTemplate.DefaultCellStyle, true);
+        }
+
+        public void Init(DataGridViewButtonPlusCellParam param)
+        {
+            DefaultBackColor = param.DefaultBackColor;
+            HoverBackColor = param.HoverBackColor;
+            Radius = param.Radius;
+            TextFont = param.TextFont;
+            Text = param.Text;
+            FontColor = param.FontColor;
+            HoverFontColor = param.HoverFontColor;
+            BackgroundColor = param.BackgroundColor;
+        }
+
+        public void ReDraw(string text)
+        {
+            Text = text;
+            ReDraw();
+        }
+
         /// <summary>
         /// 私有的单元格重绘方法，根据鼠标是否移动到按钮上，对按钮的不同背景和边框进行绘制。
         /// </summary>
@@ -78,6 +147,7 @@ namespace DemoApp
 
             var _rect = new Rectangle { X = recDetail.X + 2, Y = recDetail.Y + 2, Width = recDetail.X + recDetail.Width - 4, Height = recDetail.Y + recDetail.Height - 4 };
             Draw(_rect, graphics, false, btnBackgroundColor);
+
             DrawText(Text, TextFont, recDetail, graphics, btnFontColor);
 
             return cellBounds;
@@ -203,5 +273,27 @@ namespace DemoApp
                 return true;
             return false;
         }
+    }
+
+    public class DataGridViewButtonPlusColumnParam : DataGridViewButtonPlusCellParam { }
+
+    public class DataGridViewButtonPlusCellParam
+    {
+        // 默认按钮颜色
+        public Color DefaultBackColor { get; set; } = Color.FromArgb(255, 79, 196, 123);
+        // 进入时按钮颜色
+        public Color HoverBackColor { get; set; } = Color.FromArgb(255, 90, 247, 149);
+        // 圆角
+        public int Radius { get; set; } = 12;
+        // 文字字体
+        public Font TextFont { get; set; } = new Font("宋体", 9);
+        // 按钮文字
+        public string Text { get; set; } = "按钮";
+        // 按钮文字颜色
+        public Color FontColor { get; set; } = Color.Black;
+        // 进入时按钮文字颜色
+        public Color HoverFontColor { get; set; } = Color.Black;
+        // 画布背景颜色
+        public Color BackgroundColor { get; set; } = Color.White;
     }
 }

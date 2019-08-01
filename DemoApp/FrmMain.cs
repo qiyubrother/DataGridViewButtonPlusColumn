@@ -27,51 +27,62 @@ namespace DemoApp
             dt.Columns.Add("Name", typeof(string));
             dt.Columns.Add("Age", typeof(string));
             dt.Rows.Add("Liuzhenhua", "30");
+            dt.Rows.Add("Zhaoshasha", "40");
             bs.DataSource = dt;
             dgv.DataSource = bs;
-
-            var dc = new DataGridViewButtonPlusColumn(); 
+#if true
+            // 针对不同列进行个性化设置
+            var dc = new DataGridViewButtonPlusColumn();
             dgv.Columns.Add(dc);
-            var dc2 = new DataGridViewButtonPlusColumn();
+            var dc2 = new DataGridViewButtonPlusColumn(new DataGridViewButtonPlusColumnParam
+            {
+                Text = "按钮2",                                // 设置按钮文字内容
+                TextFont = new Font("微软雅黑", 12, FontStyle.Bold), // 设置按钮文字字体
+                FontColor = Color.Yellow,                            // 设置按钮文字颜色
+                HoverFontColor = Color.White,                        // 设置按钮文字进入时颜色
+                HoverBackColor = Color.Red,                          // 设置按钮进入时背景颜色
+                Radius = 20,                                         // 设置按钮圆角(1-25)
+                BackgroundColor = Color.DimGray,                     // 设置画布背景颜色
+                DefaultBackColor = Color.Gold                        // 设置按钮背景颜色
+            });
             dgv.Columns.Add(dc2);
-            var dc3 = new DataGridViewButtonPlusColumn();
+            var dc3 = new DataGridViewButtonPlusColumn(new DataGridViewButtonPlusColumnParam
+            {
+                Text = "按钮3",                                      // 设置按钮文字内容
+                FontColor = Color.Red,                               // 设置按钮文字颜色
+                Radius = 15,                                         // 设置按钮圆角(1-25)
+            });
             dgv.Columns.Add(dc3);
 
-            dgv.CellPainting += Dgv_CellPainting;
             dgv.CellContentClick += Dgv_CellContentClick;
-        }
 
-        private void Dgv_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
-        {
-            var dv = sender as DataGridView;
-            if (e.ColumnIndex == -1 || e.RowIndex == -1 || dv == null) return;
+            new[] { dc, dc2, dc3 }.All(x => { x.Redraw(); return true; });
+#else
 
-            if (dv.Columns[e.ColumnIndex] is DataGridViewButtonPlusColumn)
+            // 针对不同单元格进行个性化设置
+            var dc = new DataGridViewButtonPlusColumn();
+            var dc2 = new DataGridViewButtonPlusColumn();
+            var dc3 = new DataGridViewButtonPlusColumn();
+            dgv.Columns.AddRange(new[] { dc, dc2, dc3 });
+
+            foreach (DataGridViewRow dgvr in dgv.Rows)
             {
-                var cell = dv.Rows[e.RowIndex].Cells[e.ColumnIndex] as DataGridViewButtonPlusCell;
-                if (e.ColumnIndex == 2)
+                foreach (DataGridViewColumn dgvc in dgv.Columns)
                 {
-                    cell.Text = "按钮A";                                      // 设置按钮文字内容
-                    cell.TextFont = new Font("微软雅黑", 12, FontStyle.Bold); // 设置按钮文字字体
-                    cell.FontColor = Color.Yellow;                            // 设置按钮文字颜色
-                    cell.HoverFontColor = Color.White;                        // 设置按钮文字进入时颜色
-                    cell.HoverBackColor = Color.Red;                          // 设置按钮进入时背景颜色
-                    cell.Radius = 20;                                         // 设置按钮圆角(1-25)
-                    cell.BackgroundColor = Color.DimGray;                     // 设置画布背景颜色
-                    cell.DefaultBackColor = Color.Gold;                       // 设置按钮背景颜色
-                }
-                else if (e.ColumnIndex == 3)
-                {
-                    cell.TextFont = new Font("华文行楷", 12);
-                    cell.Text = "按钮B";
-                    cell.Radius = 1;
-                }
-                else if (e.ColumnIndex == 4)
-                {
-                    cell.FontColor = Color.Blue;
-                    cell.Text = "按钮C";
+                    if (dgvc is DataGridViewButtonPlusColumn)
+                    {
+                        var cell = dgvr.Cells[dgvc.Index] as DataGridViewButtonPlusCell;
+                        cell.Init(new DataGridViewButtonPlusCellParam
+                        {
+                            Text = $"{dgvr.Index},{dgvc.Index}",
+                        });
+                        //cell.ReDraw();
+                    }
                 }
             }
+            dgv.CellContentClick += Dgv_CellContentClick;
+#endif
+
         }
 
         private void Dgv_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -82,7 +93,8 @@ namespace DemoApp
             if (dv.Columns[e.ColumnIndex] is DataGridViewButtonPlusColumn)
             {
                 var cell = dv.Rows[e.RowIndex].Cells[e.ColumnIndex] as DataGridViewButtonPlusCell;
-                MessageBox.Show("已经点击过了");
+                cell.Text = "Yahoo！";
+                MessageBox.Show($"Cell({e.RowIndex},{e.ColumnIndex}) Clicked.");
             }
         }
     }
